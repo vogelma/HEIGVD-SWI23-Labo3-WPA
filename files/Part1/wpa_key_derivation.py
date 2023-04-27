@@ -19,7 +19,7 @@ __status__ 		= "Prototype"
 
 from scapy.all import *
 from binascii import a2b_hex, b2a_hex
-from backports.pbkdf2 import pbkdf2_hmac
+from pbkdf2 import *
 from numpy import array_split
 from numpy import array
 import hmac, hashlib
@@ -76,7 +76,7 @@ print("Mic Test: ", b2a_hex(mic_to_test), "\n")
 #calculate 4096 rounds to obtain the 256 bit (32 oct) PMK
 passPhrase = str.encode(passPhrase)
 ssid = str.encode(ssid)
-pmk = pbkdf2_hmac("sha1", passPhrase, ssid, 4096, 32)
+pmk = pbkdf2(hashlib.sha1,passPhrase, ssid, 4096, 32)
 
 #expand pmk to obtain PTK
 ptk = customPRF512(pmk,str.encode(A),B)
