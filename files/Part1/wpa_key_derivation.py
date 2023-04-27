@@ -59,7 +59,8 @@ SNonce      = wpa[6][WPA_key].nonce
 mic_to_test = wpa[8][WPA_key].wpa_key_mic
 
 B           = min(APmac,Clientmac)+max(APmac,Clientmac)+min(ANonce,SNonce)+max(ANonce,SNonce) #used in pseudo-random function
-
+# set the MIC key to 0 before getting the data cf donnée
+wpa[8][WPA_key].wpa_key_mic = 0
 data        = bytes(wpa[8][EAPOL])
 
 print ("\n\nValues used to derivate keys")
@@ -70,6 +71,7 @@ print ("AP Mac: ",b2a_hex(APmac),"\n")
 print ("CLient Mac: ",b2a_hex(Clientmac),"\n")
 print ("AP Nonce: ",b2a_hex(ANonce),"\n")
 print ("Client Nonce: ",b2a_hex(SNonce),"\n")
+print("Mic Test: ", b2a_hex(mic_to_test), "\n")
 
 #calculate 4096 rounds to obtain the 256 bit (32 oct) PMK
 passPhrase = str.encode(passPhrase)
