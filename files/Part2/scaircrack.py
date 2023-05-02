@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Derive WPA keys from Passphrase and 4-way handshake info
+Crack WPA passphrase from 4-way handshake using dctionnary attack
 
 Calcule un MIC d'authentification (le MIC pour la transmission de données
 utilise l'algorithme Michael. Dans ce cas-ci, l'authentification, on utilise
@@ -40,8 +40,8 @@ def customPRF512(key,A,B):
         R = R+hmacsha1.digest()
     return R[:blen]
 
-# The file containing the passphrases to test
-PASSPHRASES_FILE = 'passphrases.txt'
+# Path to the dictionnary file
+DICTIONNARY_FILE = 'passphrases.txt'
 
 # Read capture file -- it contains beacon, authentication, associacion, handshake and data
 wpa=rdpcap("wpa_handshake.cap") 
@@ -67,11 +67,12 @@ wpa[8][WPA_key].wpa_key_mic = 0
 data        = bytes(wpa[8][EAPOL])
 
 # Read all passphrases
-with open(PASSPHRASES_FILE) as f:
+with open(DICTIONNARY_FILE) as f:
     passphrases = f.readlines()
 
 # Remove whitespace characters at the end of each line
 passphrases = [ p.strip() for p in passphrases ]
+print(f'Now cracking ({len(passphrases)} entries in dictionnary)...')
 
 # Try all passphrases in the file
 for passphrase in passphrases:
